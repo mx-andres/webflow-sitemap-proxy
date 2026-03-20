@@ -7,7 +7,7 @@ A minimal Next.js app that proxies a Webflow sitemap, applies custom rules, and 
 - Optionally adds extra URLs
 - Optionally rewrites the domain of all URLs
 - Splits the final set into multiple sub-sitemaps when the total exceeds the limit (default 45,000)
-- Exposed under a basePath so you can host it at `/config` alongside your Webflow site
+- Serves the sitemap at `/sitemap.xml` (root) when `BASE_PATH=root`, or under a custom path like `/config` if configured
 
 ## How it works
 1. Fetches the source sitemap from your Webflow site (`ORIGIN_DOMAIN`), parses it, and materializes entries.
@@ -18,10 +18,10 @@ A minimal Next.js app that proxies a Webflow sitemap, applies custom rules, and 
 3. If the final URL count is greater than the configured limit, returns a sitemap index listing chunked sub-sitemaps.
 
 ### Routes
-- Sitemap index or single sitemap: `/config/sitemap.xml`
-- Sub-sitemaps (when needed): `/config/sitemap/[n].xml` (e.g. `/config/sitemap/1.xml`)
+With `BASE_PATH=root` (default for MaintainX):
+- Sitemap index or single sitemap: `/sitemap.xml`
+- Sub-sitemaps (when needed): `/sitemap/[n].xml` (e.g. `/sitemap/1.xml`)
 
-> Note: The app’s basePath is `/config` (see `next.config.ts`). Adjust links accordingly if you change it.
 
 ## Configuration
 
@@ -59,23 +59,21 @@ npm install
 npm run dev
 ```
 
-Visit:
-- `http://localhost:3000/config/sitemap.xml` → sitemap or sitemap index
-- `http://localhost:3000/config/sitemap/1.xml` → first chunk (only if index is returned)
-
-The basePath is set to `/config` in `next.config.ts`. If you change it, the routes and index links will change accordingly.
+Visit (with `BASE_PATH=root`):
+- `http://localhost:3000/sitemap.xml` → sitemap or sitemap index
+- `http://localhost:3000/sitemap/1.xml` → first chunk (only if index is returned)
 
 ## Deploying
-You can deploy wherever you host Next.js apps. To deploy alongside your Webflow site on Webflow Cloud, see the docs:
-
-- Webflow Cloud overview: https://developers.webflow.com/webflow-cloud/intro
+You can deploy wherever you host Next.js apps. To deploy alongside your Webflow site on Webflow Cloud:
+- Set **Path** to `/` so the sitemap is served at `/sitemap.xml` (root)
+- See: https://developers.webflow.com/webflow-cloud/intro
 
 ## Webflow project settings and robots.txt
 - Keep Webflow’s auto-generated sitemap enabled (so the source `sitemap.xml` remains available at `ORIGIN_DOMAIN`).
 - Disable the setting that auto-inserts the Webflow sitemap into `robots.txt`.
-- Manually add a `robots.txt` line that points to this app’s sitemap (usually `https://yourdomain.com/config/sitemap.xml`). For example:
+- Manually add a `robots.txt` line that points to this app’s sitemap. With `BASE_PATH=root`: `https://yourdomain.com/sitemap.xml`. For example:
   ```
-  Sitemap: https://yourdomain.com/config/sitemap.xml
+  Sitemap: https://getmaintainx.com/sitemap.xml
   ```
 
 ## License
