@@ -12,7 +12,7 @@ const urlsToAdd: string[] = [
     "/work/project-2"
 ];
 
-const newSitemapDomain: string = "";
+const newSitemapDomain: string = "https://getmaintainx.com";
 
 export async function getUrlsToRemove(): Promise<string[]> {
     const origin = process.env.ORIGIN_DOMAIN || ''; // Use empty string if not set to avoid 'undefined' in patterns
