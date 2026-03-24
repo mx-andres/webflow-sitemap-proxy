@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getMainSitemapResponse } from './handler';
+import { getMainSitemapResponse } from '@/app/sitemap.xml/handler';
 
 export async function GET(request: NextRequest) {
     try {
@@ -10,4 +10,4 @@ export async function GET(request: NextRequest) {
     }
 }
 
-export const dynamic = 'force-dynamic'; 
+export const dynamic = 'force-dynamic';

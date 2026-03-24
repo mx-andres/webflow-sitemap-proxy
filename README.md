@@ -20,7 +20,10 @@ A minimal Next.js app that proxies a Webflow sitemap, applies custom rules, and 
 ### Routes
 With `BASE_PATH=root` (default for MaintainX):
 - Sitemap index or single sitemap: `/sitemap.xml`
+- Same payload at `/config/sitemap-webflow.xml` (fixed path for ops/testing)
 - Sub-sitemaps (when needed): `/sitemap/[n].xml` (e.g. `/sitemap/1.xml`)
+
+If the app uses a non-root `BASE_PATH` (e.g. `/config`), the alias is `{BASE_PATH}/sitemap-webflow.xml` (still `/config/sitemap-webflow.xml` when `BASE_PATH` is `/config`). A root deploy may also respond at `/sitemap-webflow.xml`; prefer `/config/sitemap-webflow.xml` for the agreed testing URL.
 
 
 ## Configuration
@@ -61,6 +64,7 @@ npm run dev
 
 Visit (with `BASE_PATH=root`):
 - `http://localhost:3000/sitemap.xml` → sitemap or sitemap index
+- `http://localhost:3000/config/sitemap-webflow.xml` → same as above (testing / ops)
 - `http://localhost:3000/sitemap/1.xml` → first chunk (only if index is returned)
 
 ## Deploying
