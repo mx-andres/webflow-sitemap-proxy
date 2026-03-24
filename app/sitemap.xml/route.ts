@@ -8,7 +8,9 @@ import {
     applyDomainReplace,
     buildUrlsetXml,
     buildSitemapIndexXml,
-    computeChunks
+    computeChunks,
+    sanitizeUrlEntriesForSeo,
+    sanitizeUrlsetAttrs
 } from './utils';
 import config from '@/next.config';
 
@@ -22,12 +24,15 @@ export async function GET(request: NextRequest) {
             console.warn('Sitemap structure might be unexpected or empty.');
         }
 
-        const urlsetAttrs = sitemapObject.urlset ? preserveUrlsetAttrs(sitemapObject.urlset) : {};
+        const urlsetAttrs = sanitizeUrlsetAttrs(
+            sitemapObject.urlset ? preserveUrlsetAttrs(sitemapObject.urlset) : {}
+        );
 
         let urls = (sitemapObject.urlset && sitemapObject.urlset.url) ? sitemapObject.urlset.url : [];
         urls = applyRemovals(urls, urlsToRemove);
         urls = applyAdditions(urls, urlsToAdd);
         urls = applyDomainReplace(urls, locReplacePrefixes, domainToReplace);
+        urls = sanitizeUrlEntriesForSeo(urls);
 
         const totalUrls = Array.isArray(urls) ? urls.length : 0;
 

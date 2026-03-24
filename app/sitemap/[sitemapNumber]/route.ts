@@ -7,7 +7,9 @@ import {
     applyAdditions,
     applyDomainReplace,
     buildUrlsetXml,
-    sliceChunk
+    sliceChunk,
+    sanitizeUrlEntriesForSeo,
+    sanitizeUrlsetAttrs
 } from '../../sitemap.xml/utils';
 
 export async function GET(request: NextRequest, context: { params: Promise<{ sitemapNumber: string }> }) {
@@ -25,12 +27,13 @@ export async function GET(request: NextRequest, context: { params: Promise<{ sit
             return new NextResponse('Not Found', { status: 404 });
         }
 
-        const urlsetAttrs = preserveUrlsetAttrs(sitemapObject.urlset);
+        const urlsetAttrs = sanitizeUrlsetAttrs(preserveUrlsetAttrs(sitemapObject.urlset));
 
         let urls = sitemapObject.urlset.url;
         urls = applyRemovals(urls, urlsToRemove);
         urls = applyAdditions(urls, urlsToAdd);
         urls = applyDomainReplace(urls, locReplacePrefixes, domainToReplace);
+        urls = sanitizeUrlEntriesForSeo(urls);
 
         const startIndex = (pageNumber - 1) * sitemapLimit;
         if (startIndex >= urls.length) {

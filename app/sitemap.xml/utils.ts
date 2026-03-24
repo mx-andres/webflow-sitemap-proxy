@@ -9,7 +9,39 @@ import {
   getSitemapLimit
 } from './config';
 
-export type UrlEntry = { loc: string } & Record<string, any>;
+export type UrlEntry = { loc: string; priority?: number } & Record<string, any>;
+
+/** Default relative priority when the source omits <priority> (sitemaps.org default is 0.5). */
+const DEFAULT_SITEMAP_PRIORITY = 0.5;
+
+function parsePriorityValue(value: unknown): number | undefined {
+  if (value === undefined || value === null) return undefined;
+  const n = typeof value === 'number' ? value : parseFloat(String(value));
+  if (!Number.isFinite(n) || n < 0 || n > 1) return undefined;
+  return n;
+}
+
+/** Drops hreflang alternate links (xhtml:link) and ensures every URL has a priority. */
+export function sanitizeUrlEntriesForSeo(urls: UrlEntry[]): UrlEntry[] {
+  if (!Array.isArray(urls)) return urls;
+  return urls.map((entry) => {
+    const next: UrlEntry = { ...entry };
+    delete next['xhtml:link'];
+    for (const key of Object.keys(next)) {
+      if (key.startsWith('xhtml:')) delete next[key];
+    }
+    const p = parsePriorityValue(next.priority);
+    next.priority = p ?? DEFAULT_SITEMAP_PRIORITY;
+    return next;
+  });
+}
+
+/** Removes xhtml namespace from urlset when alternates are stripped. */
+export function sanitizeUrlsetAttrs(attrs: Record<string, string>): Record<string, string> {
+  const out = { ...attrs };
+  delete out['@_xmlns:xhtml'];
+  return out;
+}
 
 // One configured parser instance for both routes
 export const parser = new XMLParser({

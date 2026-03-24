@@ -12,7 +12,8 @@ const urlsToAdd: string[] = [
     "/work/project-2"
 ];
 
-const newSitemapDomain: string = "https://getmaintainx.com";
+/** When `SITEMAP_PUBLIC_ORIGIN` is unset, rewritten `<loc>` values use this origin (no trailing slash). */
+const DEFAULT_SITEMAP_PUBLIC_ORIGIN = "https://www.getmaintainx.com";
 
 export async function getUrlsToRemove(): Promise<string[]> {
     const origin = process.env.ORIGIN_DOMAIN || ''; // Use empty string if not set to avoid 'undefined' in patterns
@@ -31,8 +32,12 @@ export async function getUrlsToAdd(): Promise<string[]> {
 }
 
 export async function getDomainToReplace(): Promise<string> {
-    // NOTE: Return empty string if no domain replacement is needed
-    return newSitemapDomain; // e.g. 'https://www.newdomain.com'
+    const raw = process.env.SITEMAP_PUBLIC_ORIGIN;
+    if (raw !== undefined && raw.trim() === "") {
+        return "";
+    }
+    const value = (raw ?? DEFAULT_SITEMAP_PUBLIC_ORIGIN).trim().replace(/\/$/, "");
+    return value;
 }
 
 export async function getSourceSitemapUrl(): Promise<string> {
