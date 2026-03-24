@@ -54,6 +54,17 @@ export async function getOriginDomain(): Promise<string> {
     return origin;
 }
 
+/** URL prefixes to rewrite to the public sitemap domain (longest match wins). Includes ORIGIN_DOMAIN plus optional comma-separated SITEMAP_LOC_REPLACE_PREFIXES when fetch host differs from URLs inside the sitemap. */
+export async function getLocReplacePrefixes(): Promise<string[]> {
+    const origin = await getOriginDomain();
+    const extra = process.env.SITEMAP_LOC_REPLACE_PREFIXES;
+    const extras = extra
+        ? extra.split(',').map((s) => s.trim()).filter(Boolean)
+        : [];
+    const merged = [origin, ...extras].filter(Boolean);
+    return [...new Set(merged)];
+}
+
 export async function getSitemapLimit(): Promise<number> {
     const raw = process.env.SITEMAP_LIMIT;
     if (!raw) return 45000;

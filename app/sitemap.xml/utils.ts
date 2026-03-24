@@ -5,6 +5,7 @@ import {
   getUrlsToAdd,
   getDomainToReplace,
   getOriginDomain,
+  getLocReplacePrefixes,
   getSitemapLimit
 } from './config';
 
@@ -29,15 +30,16 @@ export const builder = new XMLBuilder({
 });
 
 export async function readConfig() {
-  const [sourceSitemapUrl, urlsToRemove, urlsToAdd, domainToReplace, originDomain, sitemapLimit] = await Promise.all([
+  const [sourceSitemapUrl, urlsToRemove, urlsToAdd, domainToReplace, originDomain, locReplacePrefixes, sitemapLimit] = await Promise.all([
     getSourceSitemapUrl(),
     getUrlsToRemove(),
     getUrlsToAdd(),
     getDomainToReplace(),
     getOriginDomain(),
+    getLocReplacePrefixes(),
     getSitemapLimit()
   ]);
-  return { sourceSitemapUrl, urlsToRemove, urlsToAdd, domainToReplace, originDomain, sitemapLimit };
+  return { sourceSitemapUrl, urlsToRemove, urlsToAdd, domainToReplace, originDomain, locReplacePrefixes, sitemapLimit };
 }
 
 export async function fetchAndParseSource(sourceSitemapUrl: string) {
@@ -87,14 +89,38 @@ export function applyAdditions(urls: UrlEntry[], additions: string[]): UrlEntry[
   return [...urls, ...extra];
 }
 
-export function applyDomainReplace(urls: UrlEntry[], origin: string, replacement: string): UrlEntry[] {
-  if (!origin || !replacement) return urls;
-  return urls.map(entry => {
-    if (entry.loc && typeof entry.loc === 'string' && entry.loc.startsWith(origin)) {
-      return { ...entry, loc: entry.loc.replace(origin, replacement) };
+function replaceUrlString(s: string, sortedPrefixes: string[], replacement: string): string {
+  for (const prefix of sortedPrefixes) {
+    if (s.startsWith(prefix)) {
+      return s.replace(prefix, replacement);
     }
-    return entry;
-  });
+  }
+  return s;
+}
+
+/** Rewrites any string in the tree that starts with a replace prefix (loc, xhtml:link @_href, etc.). */
+function deepReplaceUrlStrings(value: unknown, sortedPrefixes: string[], replacement: string): unknown {
+  if (value === null || value === undefined) return value;
+  if (typeof value === 'string') {
+    return replaceUrlString(value, sortedPrefixes, replacement);
+  }
+  if (Array.isArray(value)) {
+    return value.map((v) => deepReplaceUrlStrings(v, sortedPrefixes, replacement));
+  }
+  if (typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value)) {
+      out[k] = deepReplaceUrlStrings(v, sortedPrefixes, replacement);
+    }
+    return out;
+  }
+  return value;
+}
+
+export function applyDomainReplace(urls: UrlEntry[], prefixes: string[], replacement: string): UrlEntry[] {
+  if (!replacement || !prefixes.length) return urls;
+  const sorted = [...prefixes].filter(Boolean).sort((a, b) => b.length - a.length);
+  return urls.map((entry) => deepReplaceUrlStrings(entry, sorted, replacement) as UrlEntry);
 }
 
 export function buildUrlsetXml(urls: UrlEntry[], attrs?: Record<string, string>): string {

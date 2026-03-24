@@ -14,7 +14,7 @@ import config from '@/next.config';
 
 export async function GET(request: NextRequest) {
     try {
-        const { sourceSitemapUrl, urlsToRemove, urlsToAdd, domainToReplace, originDomain, sitemapLimit } = await readConfig();
+        const { sourceSitemapUrl, urlsToRemove, urlsToAdd, domainToReplace, locReplacePrefixes, sitemapLimit } = await readConfig();
 
         const sitemapObject = await fetchAndParseSource(sourceSitemapUrl);
 
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
         let urls = (sitemapObject.urlset && sitemapObject.urlset.url) ? sitemapObject.urlset.url : [];
         urls = applyRemovals(urls, urlsToRemove);
         urls = applyAdditions(urls, urlsToAdd);
-        urls = applyDomainReplace(urls, originDomain, domainToReplace);
+        urls = applyDomainReplace(urls, locReplacePrefixes, domainToReplace);
 
         const totalUrls = Array.isArray(urls) ? urls.length : 0;
 

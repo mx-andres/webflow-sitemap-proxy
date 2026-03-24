@@ -18,7 +18,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ sit
             return new NextResponse('Not Found', { status: 404 });
         }
 
-        const { sourceSitemapUrl, urlsToRemove, urlsToAdd, domainToReplace, originDomain, sitemapLimit } = await readConfig();
+        const { sourceSitemapUrl, urlsToRemove, urlsToAdd, domainToReplace, locReplacePrefixes, sitemapLimit } = await readConfig();
 
         const sitemapObject = await fetchAndParseSource(sourceSitemapUrl);
         if (!(sitemapObject.urlset && sitemapObject.urlset.url)) {
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ sit
         let urls = sitemapObject.urlset.url;
         urls = applyRemovals(urls, urlsToRemove);
         urls = applyAdditions(urls, urlsToAdd);
-        urls = applyDomainReplace(urls, originDomain, domainToReplace);
+        urls = applyDomainReplace(urls, locReplacePrefixes, domainToReplace);
 
         const startIndex = (pageNumber - 1) * sitemapLimit;
         if (startIndex >= urls.length) {
